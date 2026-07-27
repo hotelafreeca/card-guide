@@ -191,7 +191,7 @@ function cardBlocks(){
     const 기본 = [
       ['연회비', c.기본.연회비], ['전월실적', c.기본.전월실적], [L.한도, c.기본.한도],
       [L.제외, c.기본.제외], ['유지 근거', c.기본.유지근거]
-    ];
+    ].filter(([,v]) => v);
     const tags = c.태그 || [c.유형];
     const head =
       '<div class="row1"><span class="t">'+hl(c.이름)+'</span>'
@@ -199,9 +199,11 @@ function cardBlocks(){
       + '</div>'
       + '<div class="oneline">'+hl(c.한줄)+'</div>';
     const body =
-      '<div class="seclabel">기본 정보</div>'
-      + '<dl class="kv">' + 기본.map(([k,v]) =>
-          '<dt>'+esc(k)+'</dt><dd'+(v ? '>'+hl(v) : ' class="blank">—')+'</dd>').join('') + '</dl>'
+      (기본.length
+        ? '<div class="seclabel">기본 정보</div>'
+          + '<dl class="kv">' + 기본.map(([k,v]) =>
+              '<dt>'+esc(k)+'</dt><dd>'+hl(v)+'</dd>').join('') + '</dl>'
+        : '')
       + '<div class="seclabel">혜택 영역</div>'
       + c.한도그룹.map(g =>
           '<div class="grp"><div class="grphead"><span>'+hl(g.그룹)+'</span>'
