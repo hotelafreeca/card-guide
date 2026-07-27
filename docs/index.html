@@ -204,15 +204,18 @@ function cardBlocks(){
           + '<dl class="kv">' + 기본.map(([k,v]) =>
               '<dt>'+esc(k)+'</dt><dd>'+hl(v)+'</dd>').join('') + '</dl>'
         : '')
-      + '<div class="seclabel">혜택 영역</div>'
-      + c.한도그룹.map(g =>
-          '<div class="grp"><div class="grphead"><span>'+hl(g.그룹)+'</span>'
-          + '<span class="cap">'+hl(g.통합한도)+'</span></div>'
-          + g.영역.map(a =>
-              '<div class="area"><div class="aname">'+hl(a.이름)+'</div>'
-              + '<div class="acond">'+hl([a.시간횟수, a.회당].filter(Boolean).join(' · '))+'</div></div>'
-            ).join('')
-          + '</div>').join('')
+      + (c.한도그룹.length
+        ? '<div class="seclabel">혜택 영역</div>'
+          + c.한도그룹.map(g =>
+              '<div class="grp"><div class="grphead"><span>'+hl(g.그룹)+'</span>'
+              + (g.통합한도 ? '<span class="cap">'+hl(g.통합한도)+'</span>' : '') + '</div>'
+              + g.영역.map(a => {
+                  const cond = [a.시간횟수, a.회당].filter(Boolean).join(' · ');
+                  return '<div class="area"><div class="aname">'+hl(a.이름)+'</div>'
+                    + (cond ? '<div class="acond">'+hl(cond)+'</div>' : '') + '</div>';
+                }).join('')
+              + '</div>').join('')
+        : '')
       + (c.기타 && c.기타.length
           ? '<div class="seclabel">기타</div><ul class="etc">'
             + c.기타.map(x => '<li>'+hl(x)+'</li>').join('') + '</ul>'
