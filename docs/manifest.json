@@ -1,0 +1,14 @@
+{
+  "name": "카드 가이드",
+  "short_name": "카드 가이드",
+  "description": "신용카드 결제 가이드 — 상황별 최적 카드",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf9f5",
+  "theme_color": "#1f5c4d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

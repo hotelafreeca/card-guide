@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>카드 가이드</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="카드 가이드">
+<meta name="theme-color" content="#1f5c4d">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --ink:#1c1d21; --muted:#6b6e76; --line:#e3e1da; --bg:#faf9f5; --card:#ffffff;
+    --accent:#1f5c4d; --accent-soft:#e7efec; --warn:#9a5b1d; --warn-soft:#f5ead9;
+    --night:#3a3d6b; --night-soft:#e8e9f5; --shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#e8e7e2; --muted:#9a9da6; --line:#33363c; --bg:#17181c; --card:#20222a;
+      --accent:#5db89a; --accent-soft:#1e3129; --warn:#d99a55; --warn-soft:#3a2c1a;
+      --night:#9ea3e8; --night-soft:#262844; --shadow:0 1px 3px rgba(0,0,0,.3);
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+    line-height:1.5; padding-bottom:env(safe-area-inset-bottom);}
+  /* ── 헤더 ── */
+  header{position:sticky; top:0; z-index:10; background:var(--bg);
+    padding:calc(10px + env(safe-area-inset-top)) 14px 0; border-bottom:1px solid var(--line);}
+  .titlebar{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .titlebar h1{font-size:17px; font-weight:800; margin:0; letter-spacing:-0.02em; flex:1;}
+  .titlebar .stamp{font-size:11px; color:var(--muted);}
+  .iconbtn{border:1px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:10px; width:34px; height:34px; font-size:15px; display:flex;
+    align-items:center; justify-content:center; cursor:pointer; flex:none;}
+  .iconbtn:active{opacity:.6;}
+  .searchwrap{position:relative; margin-bottom:8px;}
+  .searchwrap input{width:100%; font-size:16px; padding:10px 36px 10px 38px;
+    border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink); outline:none;}
+  .searchwrap input:focus{border-color:var(--accent);}
+  .searchwrap input::-webkit-search-cancel-button{-webkit-appearance:none; appearance:none;}
+  .searchwrap .mag{position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    color:var(--muted); font-size:15px; pointer-events:none;}
+  .searchwrap .clear{position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    border:none; background:none; color:var(--muted); font-size:17px; padding:6px; cursor:pointer; display:none;}
+  nav{display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  nav button{flex:none; border:1px solid var(--line); background:var(--card); color:var(--ink);
+    font-size:13.5px; font-weight:600; padding:7px 13px; border-radius:999px; cursor:pointer;}
+  nav button.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+  @media (prefers-color-scheme: dark){ nav button.on{color:#0e1512;} }
+  /* ── 본문 공통 ── */
+  main{max-width:640px; margin:0 auto; padding:12px 14px 60px;}
+  .block{background:var(--card); border:1px solid var(--line); border-radius:14px;
+    margin-bottom:10px; box-shadow:var(--shadow); overflow:hidden;}
+  .bhead{padding:12px 14px; cursor:pointer; user-select:none; -webkit-user-select:none;}
+  .bhead.static{cursor:default;}
+  .row1{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .row1 .t{font-size:15.5px; font-weight:800; letter-spacing:-0.01em;}
+  .row1 .sub{font-size:12px; color:var(--muted);}
+  .tabchip{font-size:10.5px; font-weight:700; color:var(--muted); border:1px solid var(--line);
+    border-radius:5px; padding:1px 5px;}
+  .badge{font-size:10.5px; font-weight:700; border-radius:5px; padding:2px 6px;}
+  .badge.할인{background:var(--accent-soft); color:var(--accent);}
+  .badge.적립{background:var(--night-soft); color:var(--night);}
+  .badge.캐시백{background:var(--warn-soft); color:var(--warn);}
+  .badge.체크{background:var(--warn-soft); color:var(--warn);}
+  .oneline{font-size:13.5px; font-weight:600; margin-top:5px;}
+  .more{font-size:11.5px; color:var(--muted); margin-top:6px;}
+  .more .arrow{display:inline-block; transition:transform .15s;}
+  .block.open .more .arrow{transform:rotate(180deg);}
+  .body{display:none; border-top:1px dashed var(--line); padding:4px 14px 14px;
+    background:color-mix(in srgb, var(--card) 70%, var(--bg));}
+  .block.open .body{display:block;}
+  b.hit{color:var(--accent);}
+  /* ── 카드 탭: 기본 정보 ── */
+  .seclabel{font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.06em;
+    margin:14px 0 6px; text-transform:uppercase;}
+  .kv{display:grid; grid-template-columns:92px 1fr; row-gap:5px; column-gap:10px; font-size:13px;}
+  .kv dt{color:var(--muted); font-weight:600; font-size:12px; padding-top:1px;}
+  .kv dd{margin:0; white-space:pre-line;}
+  .kv dd.blank{color:var(--muted);}
+  /* ── 카드 탭: 혜택 영역 (세로 그룹 목록) ── */
+  .grp{margin-bottom:10px;}
+  .grphead{display:flex; align-items:baseline; justify-content:space-between; gap:8px;
+    background:var(--accent-soft); color:var(--accent); font-weight:800; font-size:12.5px;
+    padding:6px 10px; border-radius:8px;}
+  .grphead .cap{font-weight:700; font-size:11.5px; text-align:right; flex:none;}
+  .area{padding:7px 4px 7px 11px; margin-left:4px; border-left:2px solid var(--line);}
+  .area:last-child{padding-bottom:2px;}
+  .area .aname{font-size:13.5px; font-weight:700;}
+  .area .acond{font-size:12px; color:var(--muted); margin-top:1px;}
+  ul.etc{margin:4px 0 0; padding-left:18px;}
+  ul.etc li{font-size:12.5px; color:var(--muted); margin:3px 0;}
+  /* ── 멤버십 표 ── */
+  .tablewrap{overflow-x:auto; margin:8px 0 0;}
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th,td{border:1px solid var(--line); padding:6px 7px; text-align:left; vertical-align:top;
+    word-break:keep-all; overflow-wrap:anywhere;}
+  th{background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:11px; white-space:nowrap;}
+  tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--card) 50%, var(--bg));}
+  .tnote{font-size:11.5px; color:var(--muted); margin-top:6px; white-space:pre-line;}
+  .mdetail{font-size:13px; white-space:pre-line; margin-top:8px;}
+  /* ── 상황 탭 ── */
+  .rec{display:flex; gap:8px; margin-top:8px;}
+  .rec .num{flex:none; font-weight:800; color:var(--accent); font-size:13.5px;}
+  .rec .rbody{flex:1;}
+  .rec .rname{font-size:14px; font-weight:700;}
+  .rec .rlabel{font-size:10.5px; font-weight:700; background:var(--night-soft); color:var(--night);
+    border-radius:5px; padding:1px 6px; margin-left:5px; vertical-align:1px;}
+  .rec .rcond{font-size:12px; color:var(--muted); margin-top:1px;}
+  .rec .rmemo{font-size:12px; color:var(--warn); margin-top:1px;}
+  .snote{font-size:12px; color:var(--muted); margin-top:9px; padding-top:7px;
+    border-top:1px dashed var(--line); white-space:pre-line;}
+  ul.plain{margin:6px 0 0; padding-left:20px;}
+  ul.plain li{font-size:13.5px; margin:5px 0;}
+  .empty{text-align:center; color:var(--muted); font-size:14px; padding:40px 0;}
+  .notice{max-width:640px; margin:0 auto; padding:8px 14px 0; font-size:12px; color:var(--warn);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titlebar">
+    <h1>💳 카드 가이드</h1>
+    <div class="stamp" id="stamp"></div>
+    <button class="iconbtn" id="refresh" title="새로고침" aria-label="새로고침">↻</button>
+  </div>
+  <div class="searchwrap">
+    <span class="mag">🔍</span>
+    <input id="q" type="search" placeholder="검색 — 편의점, 주유, 넷플릭스, 스벅…"
+      autocomplete="off" autocorrect="off" autocapitalize="off">
+    <button class="clear" id="clear" aria-label="지우기">✕</button>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+
+<div class="notice" id="notice" style="display:none"></div>
+<main id="list"></main>
+
+<script>
+/* ══════════ 상태 ══════════ */
+const TABS = ['카드','멤버십','온라인','오프라인','고정비','생일'];
+let DATA = null;
+let curTab = localStorage.getItem('cardguide.tab');
+if(!TABS.includes(curTab)) curTab = '온라인';
+let query = '';
+const openSet = new Set();
+
+/* ══════════ 유틸 ══════════ */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hl(s){
+  const e = esc(s);
+  if(!query) return e;
+  try{
+    return e.replace(new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','gi'),'<b class="hit">$1</b>');
+  }catch(err){ return e; }
+}
+/* 카드 유형 → 라벨 */
+const TYPE_LABELS = {
+  '할인':  { 한도:'할인한도', 제외:'실적제외 대상' },
+  '적립':  { 한도:'적립한도', 제외:'적립제외 대상' },
+  '캐시백':{ 한도:'캐시백한도', 제외:'캐시백제외 대상' }
+};
+/* ref = "카드id/영역id" → 카드·그룹·영역 해석 */
+function resolveRef(ref){
+  const [cid, aid] = ref.split('/');
+  const card = DATA.cards.find(c => c.id === cid);
+  if(!card) return null;
+  for(const g of card.한도그룹){
+    const a = g.영역.find(x => x.id === aid);
+    if(a) return { card, group: g, area: a };
+  }
+  return null;
+}
+function refCond(r){
+  const parts = [r.area.시간횟수, r.area.회당].filter(Boolean);
+  const cap = r.group.그룹.replace(/^[①②③④⑤]\s*/,'') + ' ' + r.group.통합한도;
+  return parts.join(' · ') + ' — ' + cap;
+}
+
+/* ══════════ 블록 빌더: {tab, key, head, body, search} ══════════ */
+function cardBlocks(){
+  return DATA.cards.map(c => {
+    const L = TYPE_LABELS[c.유형] || { 한도:'한도', 제외:'제외 대상' };
+    const 기본 = [
+      ['연회비', c.기본.연회비], ['전월실적', c.기본.전월실적], [L.한도, c.기본.한도],
+      [L.제외, c.기본.제외], ['유지 근거', c.기본.유지근거]
+    ];
+    const head =
+      '<div class="row1"><span class="t">'+hl(c.이름)+'</span>'
+      + '<span class="badge '+esc(c.유형)+'">'+esc(c.유형)+(c.종류==='체크' ? '·체크' : '')+'</span>'
+      + '</div>'
+      + '<div class="oneline">'+hl(c.한줄)+'</div>';
+    const body =
+      '<div class="seclabel">기본 정보</div>'
+      + '<dl class="kv">' + 기본.map(([k,v]) =>
+          '<dt>'+esc(k)+'</dt><dd'+(v ? '>'+hl(v) : ' class="blank">—')+'</dd>').join('') + '</dl>'
+      + '<div class="seclabel">혜택 영역</div>'
+      + c.한도그룹.map(g =>
+          '<div class="grp"><div class="grphead"><span>'+hl(g.그룹)+'</span>'
+          + '<span class="cap">'+hl(g.통합한도)+'</span></div>'
+          + g.영역.map(a =>
+              '<div class="area"><div class="aname">'+hl(a.이름)+'</div>'
+              + '<div class="acond">'+hl([a.시간횟수, a.회당].filter(Boolean).join(' · '))+'</div></div>'
+            ).join('')
+          + '</div>').join('')
+      + (c.기타 && c.기타.length
+          ? '<div class="seclabel">기타</div><ul class="etc">'
+            + c.기타.map(x => '<li>'+hl(x)+'</li>').join('') + '</ul>'
+          : '');
+    const search = [c.이름, c.종류, c.유형, c.한줄, ...기본.flat(),
+      ...c.한도그룹.flatMap(g => [g.그룹, g.통합한도, ...g.영역.flatMap(a => [a.이름, a.시간횟수, a.회당])]),
+      ...(c.기타 || [])].join(' ');
+    return { tab:'카드', key:'c:'+c.id, head, body, search };
+  });
+}
+function membershipBlocks(){
+  return DATA.memberships.map(m => {
+    const head =
+      '<div class="row1"><span class="t">'+hl(m.이름)+'</span>'
+      + (m.부제 ? '<span class="sub">'+hl(m.부제)+'</span>' : '') + '</div>'
+      + '<div class="oneline">'+hl(m.핵심 || '')+'</div>';
+    let body = '';
+    if(m.표){
+      body += '<div class="tablewrap"><table><thead><tr>'
+        + m.표.머리글.map(h => '<th>'+hl(h)+'</th>').join('') + '</tr></thead><tbody>'
+        + m.표.행.map(r => '<tr>'+r.map(c => '<td>'+hl(c)+'</td>').join('')+'</tr>').join('')
+        + '</tbody></table></div>';
+      if(m.표.주석 && m.표.주석.length) body += '<div class="tnote">'+m.표.주석.map(hl).join('\n')+'</div>';
+    }
+    if(m.상세) body += '<div class="mdetail">'+hl(m.상세)+'</div>';
+    const search = [m.이름, m.부제, m.핵심, m.상세 || '',
+      ...(m.표 ? [...m.표.머리글, ...m.표.행.flat(), ...(m.표.주석 || [])] : [])].join(' ');
+    return { tab:'멤버십', key:'m:'+m.id, head, body, search };
+  });
+}
+const CIRCLED = ['①','②','③','④','⑤'];
+function situationBlocks(){
+  return DATA.situations.map((s, si) => {
+    const recs = s.추천.map((r, i) => {
+      let name, cond = '';
+      if(r.ref){
+        const rr = resolveRef(r.ref);
+        name = rr ? rr.card.이름 : r.ref;
+        cond = rr ? refCond(rr) : '';
+      } else name = r.text;
+      return '<div class="rec"><span class="num">'+(s.추천.length > 1 ? CIRCLED[i] || (i+1) : '·')+'</span>'
+        + '<div class="rbody"><span class="rname">'+hl(name)+'</span>'
+        + (r.라벨 ? '<span class="rlabel">'+hl(r.라벨)+'</span>' : '')
+        + (cond ? '<div class="rcond">'+hl(cond)+'</div>' : '')
+        + (r.메모 ? '<div class="rmemo">'+hl(r.메모)+'</div>' : '')
+        + '</div></div>';
+    }).join('');
+    const head =
+      '<div class="row1"><span class="t">'+hl(s.상황)+'</span>'
+      + (s.부제 ? '<span class="sub">'+hl(s.부제)+'</span>' : '') + '</div>'
+      + recs
+      + (s.비고 ? '<div class="snote">'+hl(s.비고)+'</div>' : '');
+    const condTexts = s.추천.map(r => {
+      if(!r.ref) return r.text + ' ' + (r.메모 || '');
+      const rr = resolveRef(r.ref);
+      return rr ? rr.card.이름 + ' ' + refCond(rr) : '';
+    });
+    const search = [s.상황, s.부제, s.비고, ...condTexts,
+      ...s.추천.map(r => r.라벨 || '')].join(' ');
+    return { tab:s.탭, key:'s:'+si, head, body:'', search, static:true };
+  });
+}
+function birthdayBlocks(){
+  const head = '<div class="row1"><span class="t">생일 쿠폰</span>'
+    + '<span class="sub">생일 달 챙기기</span></div>'
+    + '<ul class="plain">' + DATA.생일.map(x => '<li>'+hl(x)+'</li>').join('') + '</ul>';
+  return [{ tab:'생일', key:'b:0', head, body:'', search:'생일 쿠폰 ' + DATA.생일.join(' '), static:true }];
+}
+
+/* ══════════ 렌더 ══════════ */
+function allBlocks(){
+  return [...cardBlocks(), ...membershipBlocks(), ...situationBlocks(), ...birthdayBlocks()];
+}
+function renderTabs(){
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = '';
+  TABS.forEach(t => {
+    const b = document.createElement('button');
+    b.textContent = t;
+    if(t === curTab && !query) b.classList.add('on');
+    b.onclick = () => {
+      curTab = t; localStorage.setItem('cardguide.tab', t);
+      const q = document.getElementById('q');
+      if(q.value){ q.value = ''; query = ''; document.getElementById('clear').style.display = 'none'; }
+      renderTabs(); render();
+      window.scrollTo({top:0});
+    };
+    nav.appendChild(b);
+  });
+}
+function render(){
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  if(!DATA){ list.innerHTML = '<div class="empty">불러오는 중…</div>'; return; }
+  const q = query.toLowerCase();
+  const blocks = allBlocks().filter(b => q ? b.search.toLowerCase().includes(q) : b.tab === curTab);
+  if(!blocks.length){
+    list.innerHTML = '<div class="empty">' + (q ? '"'+esc(query)+'" 검색 결과가 없어요' : '항목이 없어요') + '</div>';
+    return;
+  }
+  blocks.forEach(b => {
+    const el = document.createElement('div');
+    const hasBody = !!b.body;
+    const bodyHit = hasBody && q && b.body.includes('class="hit"');
+    const headHit = q && b.head.includes('class="hit"');
+    const open = openSet.has(b.key) || (bodyHit && !headHit) || (q && hasBody && bodyHit);
+    el.className = 'block' + (open ? ' open' : '');
+    el.innerHTML =
+      '<div class="bhead' + (hasBody ? '' : ' static') + '">'
+      + (q ? '<div style="margin-bottom:4px"><span class="tabchip">'+esc(b.tab)+'</span></div>' : '')
+      + b.head
+      + (hasBody ? '<div class="more"><span class="arrow">▾</span> 상세</div>' : '')
+      + '</div>'
+      + (hasBody ? '<div class="body">'+b.body+'</div>' : '');
+    if(hasBody){
+      el.querySelector('.bhead').onclick = () => {
+        el.classList.toggle('open');
+        if(el.classList.contains('open')) openSet.add(b.key); else openSet.delete(b.key);
+      };
+    }
+    list.appendChild(el);
+  });
+}
+
+/* ══════════ 데이터 로드 ══════════ */
+async function load(){
+  try{
+    const res = await fetch('./data.json', {cache:'no-store'});
+    DATA = await res.json();
+    document.getElementById('stamp').textContent = (DATA.updated || '') + ' 기준';
+    document.getElementById('notice').style.display = 'none';
+    render();
+  }catch(e){
+    const n = document.getElementById('notice');
+    n.textContent = '데이터를 불러오지 못했어요 — 인터넷 연결을 확인해주세요 (한 번 열어두면 오프라인에서도 열려요)';
+    n.style.display = 'block';
+  }
+}
+
+/* ══════════ 이벤트 ══════════ */
+const qInput = document.getElementById('q');
+const clearBtn = document.getElementById('clear');
+qInput.addEventListener('input', () => {
+  query = qInput.value.trim();
+  clearBtn.style.display = query ? 'block' : 'none';
+  renderTabs(); render();
+});
+clearBtn.onclick = () => { qInput.value = ''; query = ''; clearBtn.style.display = 'none'; renderTabs(); render(); qInput.focus(); };
+document.getElementById('refresh').onclick = () => location.reload();
+
+/* ══════════ 시작 ══════════ */
+renderTabs(); render(); load();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
