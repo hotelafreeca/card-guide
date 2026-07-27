@@ -70,7 +70,7 @@
   .badge.적립{background:var(--night-soft); color:var(--night);}
   .badge.캐시백{background:var(--warn-soft); color:var(--warn);}
   .badge.소득공제{background:transparent; border:1px solid var(--line); color:var(--muted);}
-  .oneline{font-size:13.5px; font-weight:600; margin-top:5px;}
+  .oneline{font-size:13.5px; font-weight:600; margin-top:5px; white-space:pre-line;}
   .more{font-size:11.5px; color:var(--muted); margin-top:6px;}
   .more .arrow{display:inline-block; transition:transform .15s;}
   .block.open .more .arrow{transform:rotate(180deg);}
@@ -215,10 +215,10 @@ function cardBlocks(){
           ? '<div class="seclabel">기타</div><ul class="etc">'
             + c.기타.map(x => '<li>'+hl(x)+'</li>').join('') + '</ul>'
           : '');
-    const search = [c.이름, c.종류, c.유형, tags.join(' '), c.한줄, ...기본.flat(),
+    const search = [c.이름, c.약칭 || '', c.종류, c.유형, tags.join(' '), c.한줄, ...기본.flat(),
       ...c.한도그룹.flatMap(g => [g.그룹, g.통합한도, ...g.영역.flatMap(a => [a.이름, a.시간횟수, a.회당])]),
       ...(c.기타 || [])].join(' ');
-    return { tab:'카드', key:'c:'+c.id, head, body, search };
+    return { tab:'카드', key:'c:'+c.id, head, body, search, always: !!c.항상펼침 };
   });
 }
 function membershipBlocks(){
@@ -248,7 +248,7 @@ function situationBlocks(){
       let name, cond = '';
       if(r.ref){
         const rr = resolveRef(r.ref);
-        name = rr ? rr.card.이름 : r.ref;
+        name = r.표시 || (rr ? (rr.card.약칭 || rr.card.이름) : r.ref);
         cond = rr ? refCond(rr) : '';
       } else name = r.text;
       return '<div class="rec"><span class="num">'+(s.추천.length > 1 ? CIRCLED[i] || (i+1) : '·')+'</span>'
@@ -266,7 +266,7 @@ function situationBlocks(){
     const condTexts = s.추천.map(r => {
       if(!r.ref) return r.text + ' ' + (r.메모 || '');
       const rr = resolveRef(r.ref);
-      return rr ? rr.card.이름 + ' ' + refCond(rr) : '';
+      return (r.표시 || '') + ' ' + (rr ? (rr.card.약칭 || '') + ' ' + rr.card.이름 + ' ' + refCond(rr) : '');
     });
     const search = [s.상황, s.부제, s.비고, ...condTexts,
       ...s.추천.map(r => r.라벨 || '')].join(' ');
@@ -314,18 +314,19 @@ function render(){
   blocks.forEach(b => {
     const el = document.createElement('div');
     const hasBody = !!b.body;
+    const toggleable = hasBody && !b.always;
     const bodyHit = hasBody && q && b.body.includes('class="hit"');
     const headHit = q && b.head.includes('class="hit"');
-    const open = openSet.has(b.key) || (bodyHit && !headHit) || (q && hasBody && bodyHit);
+    const open = b.always || openSet.has(b.key) || (bodyHit && !headHit) || (q && hasBody && bodyHit);
     el.className = 'block' + (open ? ' open' : '');
     el.innerHTML =
-      '<div class="bhead' + (hasBody ? '' : ' static') + '">'
+      '<div class="bhead' + (toggleable ? '' : ' static') + '">'
       + (q ? '<div style="margin-bottom:4px"><span class="tabchip">'+esc(b.tab)+'</span></div>' : '')
       + b.head
-      + (hasBody ? '<div class="more"><span class="arrow">▾</span> 상세</div>' : '')
+      + (toggleable ? '<div class="more"><span class="arrow">▾</span> 상세</div>' : '')
       + '</div>'
       + (hasBody ? '<div class="body">'+b.body+'</div>' : '');
-    if(hasBody){
+    if(toggleable){
       el.querySelector('.bhead').onclick = () => {
         el.classList.toggle('open');
         if(el.classList.contains('open')) openSet.add(b.key); else openSet.delete(b.key);
