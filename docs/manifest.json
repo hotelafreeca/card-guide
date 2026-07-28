@@ -1,6 +1,6 @@
 {
-  "name": "카드 가이드",
-  "short_name": "카드 가이드",
+  "name": "혜림 카드 가이드",
+  "short_name": "혜림 카드 가이드",
   "description": "신용카드 결제 가이드 — 상황별 최적 카드",
   "start_url": "./",
   "scope": "./",
